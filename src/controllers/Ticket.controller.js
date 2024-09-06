@@ -1,9 +1,7 @@
-// controllers/ticketController.js
 const { catchAsyncError } = require("../middleware/catchAsyncError");
 const { ErrorHandler } = require('../utils/ErrorHandler');
-
 const Ticket = require("../models/Ticket.model");
-// Only admin
+
 exports.createTicket = catchAsyncError(async (req, res, next) => {
   try {
     const { name, price, quantity } = req.body;
