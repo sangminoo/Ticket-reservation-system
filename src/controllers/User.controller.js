@@ -87,7 +87,6 @@ exports.payForTicket = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler("Insufficient balance", 400));
     }
 
-    // **Kiểm tra và cập nhật số lượng vé một cách an toàn**
     const updatedTicket = await Ticket.findOneAndUpdate(
       {
         _id: booking.ticket._id,

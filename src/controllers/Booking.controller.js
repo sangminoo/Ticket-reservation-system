@@ -17,115 +17,6 @@ exports.getBookings = catchAsyncError(async (req, res, next) => {
   }
 });
 
-// exports.bookTicket = catchAsyncError(async (req, res, next) => {
-//   const session = await mongoose.startSession();
-//   session.startTransaction();
-
-//   try {
-//     const { userId, ticketId, quantity } = req.body;
-
-//     if (!userId || !ticketId || quantity === undefined) {
-//       await session.abortTransaction();
-//       session.endSession();
-//       return next(new ErrorHandler("Please provide all required fields", 400));
-//     }
-
-//     const ticket = await Ticket.findById(ticketId).session(session);
-//     if (!ticket) {
-//       await session.abortTransaction();
-//       session.endSession();
-//       return next(new ErrorHandler("Ticket not found", 404));
-//     }
-
-//     if (ticket.quantity < quantity) {
-//       await session.abortTransaction();
-//       session.endSession();
-//       return next(new ErrorHandler("Not enough tickets available", 400));
-//     }
-
-//     const user = await User.findById(userId).session(session);
-//     if (!user) {
-//       await session.abortTransaction();
-//       session.endSession();
-//       return next(new ErrorHandler("User not found", 404));
-//     }
-
-//     const existingBooking = await Booking.findOne({
-//       user: userId,
-//       ticket: ticketId,
-//       status: { $in: ["pending", "paid", "confirmed"] },
-//     })
-//       .session(session)
-//       .exec();
-
-//     if (existingBooking) {
-//       await session.abortTransaction();
-//       session.endSession();
-//       return next(new ErrorHandler("You have already booked this ticket", 400));
-//     }
-
-//     const canceledBooking = await Booking.findOne({
-//       user: userId,
-//       ticket: ticketId,
-//       status: "canceled",
-//     })
-//       .session(session)
-//       .exec();
-
-//     if (canceledBooking) {
-//       const newTotalAmount = ticket.price * quantity;
-
-//       canceledBooking.status = "pending";
-//       canceledBooking.quantity = quantity;
-//       canceledBooking.paymentDetails.amount = newTotalAmount;
-//       canceledBooking.bookingTime = Date.now();
-//       await canceledBooking.save({ session });
-
-//       // Cập nhật số lượng vé
-//       ticket.quantity -= quantity;
-//       ticket.available = ticket.quantity > 0;
-//       await ticket.save({ session });
-
-//       await session.commitTransaction(); // Hoàn tất transaction
-//       session.endSession();
-
-//       return res.status(200).json({
-//         success: true,
-//         message: "Booking restored successfully",
-//         bookingId: canceledBooking._id,
-//       });
-//     }
-
-//     const totalAmount = ticket.price * quantity;
-//     const newBooking = {
-//       user: userId,
-//       ticket: ticketId,
-//       quantity,
-//       paymentDetails: { amount: totalAmount },
-//       bookingTime: Date.now(),
-//       status: "pending",
-//     };
-
-//     const booking = await Booking.create([newBooking], { session });
-
-//     ticket.bookings.push(booking[0]._id);
-//     await ticket.save({ session });
-
-//     await session.commitTransaction();
-//     session.endSession();
-
-//     return res.status(201).json({
-//       success: true,
-//       message: "Booking created successfully",
-//       bookingId: booking[0]._id,
-//     });
-//   } catch (error) {
-//     await session.abortTransaction();
-//     session.endSession();
-//     console.error("Error while booking ticket:", error);
-//     return next(new ErrorHandler("Failed to book ticket", 500));
-//   }
-// });
 
 exports.bookTicket = catchAsyncError(async (req, res, next) => {
   const session = await mongoose.startSession();
@@ -287,76 +178,6 @@ exports.confirmBooking = catchAsyncError(async (req, res, next) => {
   }
 });
 
-// exports.confirmBooking = catchAsyncError(async (req, res, next) => {
-//   const session = await mongoose.startSession();
-//   session.startTransaction();
-//   try {
-//     const { bookingId } = req.body;
-
-//     const booking = await Booking.findById(bookingId)
-//       .populate("ticket")
-//       .populate("user")
-//       .session(session);
-
-//     if (!booking) {
-//       await session.abortTransaction();
-//       session.endSession();
-//       return next(new ErrorHandler("Booking not found", 404));
-//     }
-
-//     if (booking.status === "confirmed") {
-//       await session.abortTransaction();
-//       session.endSession();
-//       return next(new ErrorHandler("Booking already confirmed", 400));
-//     }
-
-//     if (booking.status !== "paid") {
-//       await session.abortTransaction();
-//       session.endSession();
-//       return next(new ErrorHandler("Booking has not been paid yet", 400));
-//     }
-
-//     booking.status = "confirmed";
-//     booking.confirmationTime = Date.now();
-//     await booking.save({ session });
-
-//     const ticket = await Ticket.findById(booking.ticket._id).session(session);
-
-//     if (!ticket) {
-//       await session.abortTransaction();
-//       session.endSession();
-//       return next(new ErrorHandler("Ticket not found", 404));
-//     }
-
-//     const bookingIndex = ticket.bookings.findIndex(
-//       (b) => b._id.toString() === bookingId
-//     );
-
-//     if (bookingIndex > -1) {
-//       ticket.bookings[bookingIndex].isConfirmed = true;
-//       ticket.bookings[bookingIndex].status = "paid";
-//     } else {
-//       await session.abortTransaction();
-//       session.endSession();
-//       return next(
-//         new ErrorHandler("Booking not found in ticket bookings", 404)
-//       );
-//     }
-
-//     await session.commitTransaction();
-//     session.endSession();
-
-//     res.status(201).json({
-//       success: true,
-//       booking,
-//     });
-//   } catch (error) {
-//     await session.abortTransaction();
-//     session.endSession();
-//     return next(new ErrorHandler(error?.message, 500));
-//   }
-// });
-
 exports.getBookingDetails = async (req, res, next) => {
   try {
     const bookingId = req.params.id;
@@ -377,6 +198,7 @@ exports.getBookingDetails = async (req, res, next) => {
     return next(new ErrorHandler(error?.message, 500));
   }
 };
+
 exports.cancelBooking = catchAsyncError(async (req, res, next) => {
   const session = await mongoose.startSession();
   session.startTransaction();
